@@ -18,7 +18,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME ./backend'
+sh 'docker build -t surbhi800/mern-app -f Dockerfile .'
             }
         }
 
