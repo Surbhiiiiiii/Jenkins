@@ -6,11 +6,16 @@ pipeline {
     }
 
     stages {
-        stage('Clone Repository') {
-            steps {
-                git 'https://github.com/Surbhiiiiiii/Jenkins.git'  // Apna GitHub repo link dal
+stage('Clone Repository') {
+    steps {
+        script {
+            withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                sh "git clone https://$GIT_USER:$GIT_PASS@github.com/Surbhiiiiiii/Jenkins.git"
             }
         }
+    }
+}
+
 
         stage('Login to DockerHub') {
             steps {
