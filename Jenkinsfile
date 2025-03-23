@@ -4,8 +4,9 @@ pipeline {
     environment {
         DOCKERHUB_USER = 'surbhi800'
         DOCKERHUB_PASS = 'Surbhi123'
-        IMAGE_NAME = 'surbhi800/mern-app'
-        AWS_SERVER = 'ubuntu@3.10.152.219'
+ IMAGE_BACKEND = 'surbhi800/mern-backend'
+        IMAGE_FRONTEND = 'surbhi800/mern-frontend'
+                AWS_SERVER = 'ubuntu@3.10.152.219'
         SSH_KEY = '~/.ssh/jenkins-docker.pem'
     }
 
@@ -16,9 +17,14 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+      stage('Build Backend Docker Image') {
             steps {
-sh 'docker build -t surbhi800/mern-app -f Dockerfile .'
+                sh 'docker build -t $IMAGE_BACKEND ./backend'
+            }
+        }
+        stage('Build Frontend Docker Image') {
+            steps {
+                sh 'docker build -t $IMAGE_FRONTEND ./frontend'
             }
         }
 
@@ -34,19 +40,19 @@ sh 'docker build -t surbhi800/mern-app -f Dockerfile .'
             }
         }
 
-        stage('Deploy on EC2') {
+        stage('Deploy on AWS EC2') {
             steps {
-                sshagent(['ec2-key']) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no -i $SSH_KEY $AWS_SERVER '
-                    # Stop and remove previous container
-                    docker stop mern-app || true && docker rm mern-app || true
-                    # Pull latest image
-                    docker pull $IMAGE_NAME
-                    # Run the container with proper environment variables and restart policy
-                    docker run -d -p 3000:3000 -p 5000:5000 --name mern-app $IMAGE_NAME
-                    '
-                    """
+                sshagent(['your-ssh-key']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ubuntu@$EC2_INSTANCE <<EOF
+                    sudo docker pull $IMAGE_BACKEND
+                    sudo docker pull $IMAGE_FRONTEND
+                    sudo docker stop backend frontend || true
+                    sudo docker rm backend frontend || true
+                    sudo docker run -d -p 5000:5000 --name backend $IMAGE_BACKEND
+                    sudo docker run -d -p 80:80 --name frontend $IMAGE_FRONTEND
+                    EOF
+                    '''
                 }
             }
         }
