@@ -52,7 +52,7 @@ pipeline {
                     sudo docker stop backend frontend || true
                     sudo docker rm backend frontend || true
                     sudo docker run -d -p 5000:5000 --name backend $IMAGE_BACKEND:latest
-                    sudo docker run -d -p 80:80 --name frontend $IMAGE_FRONTEND:latest
+                    sudo docker run -d -p 3000:3000 --name frontend $IMAGE_FRONTEND:latest
                     EOF
                     '''
                 }

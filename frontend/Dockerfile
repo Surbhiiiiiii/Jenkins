@@ -1,25 +1,20 @@
-# Use Node.js base image
-FROM node:18
+# Use a lightweight Node.js image
+FROM node:18-alpine 
 
 # Set working directory
-WORKDIR /app
+WORKDIR /app 
 
-# Copy package.json and install dependencies
-COPY package.json package-lock.json ./
-RUN npm config set registry http://registry.npmjs.org/ && npm install
+# Copy package.json and package-lock.json first (to leverage Docker caching)
+COPY package*.json ./
 
-RUN npm install
+# Install dependencies
+RUN npm install 
 
-# Copy application files
-COPY . .
+# Copy all project files
+COPY . . 
 
-# Build React app
-RUN npm run build
+# Expose port 3000 (default for React dev server)
+EXPOSE 3000 
 
-# Use Nginx to serve frontend
-FROM nginx:alpine
-COPY --from=0 /app/build /usr/share/nginx/html
-
-# Expose frontend port
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Start the React app
+CMD ["npm", "start"]
