@@ -44,7 +44,7 @@ pipeline {
                     # Pull latest image
                     docker pull $IMAGE_NAME
                     # Run the container with proper environment variables and restart policy
-                    docker run -d -p 5000:5000 --restart always --name mern-app $IMAGE_NAME
+                    docker run -d -p 3000:3000 -p 5000:5000 --name mern-app $IMAGE_NAME
                     '
                     """
                 }

@@ -1,0 +1,22 @@
+# Base image
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy package.json files separately to leverage caching
+COPY backend/package.json backend/
+COPY frontend/package.json frontend/
+
+# Install dependencies for both frontend and backend
+RUN cd backend && npm install
+RUN cd frontend && npm install
+
+# Copy all project files
+COPY . .
+
+# Build frontend
+RUN cd frontend && npm run build
+
+# Start both frontend and backend
+CMD ["sh", "-c", "cd backend && npm start & cd frontend && npm start"]
