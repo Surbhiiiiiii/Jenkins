@@ -2,53 +2,50 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "surbhi800/mern-app"  // Apna DockerHub repo name likh
+        DOCKERHUB_USER = 'surbhi800'
+        DOCKERHUB_PASS = 'Surbhi123'
+        IMAGE_NAME = 'surbhi800/mern-app'
+        AWS_SERVER = 'ubuntu@3.10.152.219'
+        SSH_KEY = '~/.ssh/jenkins-docker.pem'
     }
 
     stages {
-stage('Clone Repository') {
-    steps {
-        script {
-            withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-                sh "git clone https://$GIT_USER:$GIT_PASS@github.com/Surbhiiiiiii/Jenkins.git"
-            }
-        }
-    }
-}
-
-
-        stage('Login to DockerHub') {
+        stage('Clone Repository') {
             steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh "docker login -u $DOCKER_USER -p $DOCKER_PASS"
-                    }
-                }
+                git branch: 'main', url: 'https://github.com/your-username/mern-app.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t $IMAGE_NAME ."
+                sh 'docker build -t $IMAGE_NAME .'
             }
         }
 
-        stage('Push to DockerHub') {
+        stage('Login to Docker Hub') {
             steps {
-                sh "docker push $IMAGE_NAME"
+                sh 'echo $DOCKERHUB_PASS | docker login -u $DOCKERHUB_USER --password-stdin'
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            steps {
+                sh 'docker push $IMAGE_NAME'
             }
         }
 
         stage('Deploy on EC2') {
             steps {
-                sshagent(['ec2-ssh-key']) {
+                sshagent(['ec2-key']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@13.40.133.141 <<EOF
-                        docker pull $IMAGE_NAME
-                        docker stop mern-app || true
-                        docker rm mern-app || true
-                        docker run -d -p 5000:5000 --name mern-app $IMAGE_NAME
-                        EOF
+                    ssh -o StrictHostKeyChecking=no -i $SSH_KEY $AWS_SERVER '
+                    # Stop and remove previous container
+                    docker stop mern-app || true && docker rm mern-app || true
+                    # Pull latest image
+                    docker pull $IMAGE_NAME
+                    # Run the container with proper environment variables and restart policy
+                    docker run -d -p 5000:5000 --restart always --name mern-app $IMAGE_NAME
+                    '
                     """
                 }
             }
