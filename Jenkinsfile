@@ -4,10 +4,10 @@ pipeline {
     environment {
         DOCKERHUB_USER = 'surbhi800'
         DOCKERHUB_PASS = 'Surbhi123'
- IMAGE_BACKEND = 'surbhi800/mern-backend'
+        IMAGE_BACKEND = 'surbhi800/mern-backend'
         IMAGE_FRONTEND = 'surbhi800/mern-frontend'
-                AWS_SERVER = 'ubuntu@3.10.152.219'
-        SSH_KEY = '~/.ssh/jenkins-docker.pem'
+        AWS_SERVER = 'ubuntu@3.77.57.55'
+        SSH_KEY = '~/.ssh/docker.pem'
     }
 
     stages {
@@ -17,14 +17,15 @@ pipeline {
             }
         }
 
-      stage('Build Backend Docker Image') {
+        stage('Build Backend Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_BACKEND ./backend'
+                sh 'docker build -t $IMAGE_BACKEND:latest ./backend'
             }
         }
+
         stage('Build Frontend Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_FRONTEND ./frontend'
+                sh 'docker build -t $IMAGE_FRONTEND:latest ./frontend'
             }
         }
 
@@ -34,23 +35,24 @@ pipeline {
             }
         }
 
-        stage('Push Image to Docker Hub') {
+        stage('Push Images to Docker Hub') {
             steps {
-                sh 'docker push $IMAGE_NAME'
+                sh 'docker push $IMAGE_BACKEND:latest'
+                sh 'docker push $IMAGE_FRONTEND:latest'
             }
         }
 
         stage('Deploy on AWS EC2') {
             steps {
-                sshagent(['your-ssh-key']) {
+                sshagent(credentials: ['jenkins-ssh-key']) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ubuntu@$EC2_INSTANCE <<EOF
-                    sudo docker pull $IMAGE_BACKEND
-                    sudo docker pull $IMAGE_FRONTEND
+                    ssh -o StrictHostKeyChecking=no $AWS_SERVER <<EOF
+                    sudo docker pull $IMAGE_BACKEND:latest
+                    sudo docker pull $IMAGE_FRONTEND:latest
                     sudo docker stop backend frontend || true
                     sudo docker rm backend frontend || true
-                    sudo docker run -d -p 5000:5000 --name backend $IMAGE_BACKEND
-                    sudo docker run -d -p 80:80 --name frontend $IMAGE_FRONTEND
+                    sudo docker run -d -p 5000:5000 --name backend $IMAGE_BACKEND:latest
+                    sudo docker run -d -p 80:80 --name frontend $IMAGE_FRONTEND:latest
                     EOF
                     '''
                 }
