@@ -6,7 +6,7 @@ pipeline {
         DOCKERHUB_PASS = 'Surbhi123'
         IMAGE_BACKEND = 'surbhi800/mern-backend'
         IMAGE_FRONTEND = 'surbhi800/mern-frontend'
-        AWS_SERVER = 'ubuntu@54.67.53.161 '
+        AWS_SERVER = 'ubuntu@54.193.29.1'
         SSH_KEY = '~/.ssh/second.pem'
     }
 
