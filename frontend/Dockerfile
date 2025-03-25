@@ -2,11 +2,9 @@
 FROM node:18-alpine AS builder
 WORKDIR /app
 
-# Use cached dependencies for faster builds
 COPY package.json package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm npm install --only=production
+RUN npm ci --only=production  # --mount hata diya
 
-# Copy the rest of the code
 COPY . .  
 RUN npm run build  
 
