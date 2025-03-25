@@ -6,7 +6,7 @@ pipeline {
         DOCKERHUB_PASS = 'Surbhi123'
         IMAGE_BACKEND = 'surbhi800/mern-backend'
         IMAGE_FRONTEND = 'surbhi800/mern-frontend'
-        AWS_SERVER = 'ubuntu@54.175.179.139 '
+        AWS_SERVER = 'ubuntu@18.144.65.67'
         SSH_KEY = '~/.ssh/docker.pem'
     }
 
