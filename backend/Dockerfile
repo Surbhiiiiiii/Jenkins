@@ -1,18 +1,16 @@
-
-#Backend
 # Use Node.js base image
 FROM node:18-alpine
 
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and install dependencies
+# Copy package.json and package-lock.json separately to leverage Docker cache
 COPY package.json package-lock.json ./
-RUN npm config set registry http://registry.npmjs.org/ && npm install
 
-RUN npm install
+# Set NPM registry and install dependencies
+RUN npm config set registry http://registry.npmjs.org/ && npm ci
 
-# Copy application files
+# Copy the rest of the application files
 COPY . .
 
 # Expose backend port
