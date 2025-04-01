@@ -27,7 +27,7 @@ pipeline {
             steps {
                 sshagent(['ec2-key']) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ubuntu@35.87.34.201 <<EOF
+                    ssh -o StrictHostKeyChecking=no ubuntu@54.214.127.212 <<EOF
                     docker pull surbhi800/mern-backend:latest
                     docker pull surbhi800/mern-frontend:latest
                     docker pull surbhi800/mern-mongodb:latest
