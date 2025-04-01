@@ -6,7 +6,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git 'git@github.com:Surbhiiiiiii/Jenkins.git'
+                git 'https://github.com/Surbhiiiiiii/Jenkins'
             }
         }
         stage('Build & Push Docker Images') {
@@ -27,7 +27,7 @@ pipeline {
             steps {
                 sshagent(['ec2-key']) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ubuntu@44.247.77.221 <<EOF
+                    ssh -o StrictHostKeyChecking=no ubuntu@35.87.34.201 <<EOF
                     docker pull surbhi800/mern-backend:latest
                     docker pull surbhi800/mern-frontend:latest
                     docker pull surbhi800/mern-mongodb:latest
