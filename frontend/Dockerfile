@@ -2,7 +2,7 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm install --prefer-offline --no-audit
 COPY . .
 RUN npm run build
 
