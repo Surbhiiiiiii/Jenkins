@@ -7,26 +7,27 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-mongoose.connect("mongodb://127.0.0.1:27017/mydatabase")
+mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB Connected"))
     .catch(err => console.log(err));
+    
 
 const TaskSchema = new mongoose.Schema({ name: String });
 const Task = mongoose.model("Task", TaskSchema);
 
 // Routes
-app.get("/tasks", async (req, res) => {
+app.get("/tasks", async (req, res) => {  // Fix GET route
     const tasks = await Task.find();
     res.json(tasks);
 });
 
-app.post("/tasks", async (req, res) => {
+app.post("/tasks", async (req, res) => {  // Fix POST route
     const task = new Task({ name: req.body.name });
     await task.save();
     res.json(task);
 });
 
-app.delete("/tasks/:id", async (req, res) => {
+app.delete("/tasks/:id", async (req, res) => {  // Fix DELETE route
     await Task.findByIdAndDelete(req.params.id);
     res.json({ message: "Task deleted" });
 });

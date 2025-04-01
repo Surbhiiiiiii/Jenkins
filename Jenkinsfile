@@ -1,58 +1,84 @@
 pipeline {
     agent any
-
     environment {
-        DOCKERHUB_USER = 'surbhi800'
-        DOCKERHUB_PASS = 'Surbhi123'
-        IMAGE_BACKEND = 'surbhi800/mern-backend'
-        IMAGE_FRONTEND = 'surbhi800/mern-frontend'
-        AWS_SERVER = 'ubuntu@54.193.29.1'
-        SSH_KEY = '~/.ssh/second.pem'
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
     }
-
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/Surbhiiiiiii/Jenkins.git'
+                git 'git@github.com:Surbhiiiiiii/Jenkins.git'
             }
         }
-
-        stage('Build Backend Docker Image') {
+        stage('Build & Push Docker Images') {
             steps {
-                sh 'docker build -t $IMAGE_BACKEND:latest ./backend'
+                sh '''
+                docker build -t surbhi800/mern-backend:latest ./backend
+                docker build -t surbhi800/mern-frontend:latest ./frontend
+                docker build -t surbhi800/mern-mongodb:latest ./mongodb
+                
+                echo $DOCKERHUB_CREDENTIALS | docker login -u "surbhi800" --password-stdin
+                docker push surbhi800/mern-backend:latest
+                docker push surbhi800/mern-frontend:latest
+                docker push surbhi800/mern-mongodb:latest
+                '''
             }
         }
-
-        stage('Build Frontend Docker Image') {
-            steps {
-                sh 'docker build -t $IMAGE_FRONTEND:latest ./frontend'
-            }
-        }
-
-        stage('Login to Docker Hub') {
-            steps {
-                sh 'echo $DOCKERHUB_PASS | docker login -u $DOCKERHUB_USER --password-stdin'
-            }
-        }
-
-        stage('Push Images to Docker Hub') {
-            steps {
-                sh 'docker push $IMAGE_BACKEND:latest'
-                sh 'docker push $IMAGE_FRONTEND:latest'
-            }
-        }
-
         stage('Deploy on AWS EC2') {
             steps {
-                sshagent(credentials: ['jenkins-ssh-key']) {
+                sshagent(['ec2-key']) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no $AWS_SERVER <<EOF
-                    sudo docker pull $IMAGE_BACKEND:latest
-                    sudo docker pull $IMAGE_FRONTEND:latest
-                    sudo docker stop backend frontend || true
-                    sudo docker rm backend frontend || true
-                    sudo docker run -d -p 5000:5000 --name backend $IMAGE_BACKEND:latest
-                    sudo docker run -d -p 3000:3000 --name frontend $IMAGE_FRONTEND:latest
+                    ssh -o StrictHostKeyChecking=no ubuntu@44.247.77.221 <<EOF
+                    docker pull surbhi800/mern-backend:latest
+                    docker pull surbhi800/mern-frontend:latest
+                    docker pull surbhi800/mern-mongodb:latest
+
+                    cd /home/ubuntu
+                    cat > docker-compose.yml <<EOL
+                    version: '3.8'
+
+                    services:
+                      mongo:
+                        image: surbhi800/mern-mongodb:latest
+                        container_name: mongo
+                        ports:
+                          - '27017:27017'
+                        volumes:
+                          - mongodb_data:/data/db
+                        networks:
+                          - mern_network
+
+                      backend:
+                        image: surbhi800/mern-backend:latest
+                        container_name: backend
+                        ports:
+                          - '5000:5000'
+                        depends_on:
+                          - mongo
+                        networks:
+                          - mern_network
+                        environment:
+                          - MONGO_URI=mongodb://mongo:27017/mydatabase
+
+                      frontend:
+                        image: surbhi800/mern-frontend:latest
+                        container_name: frontend
+                        ports:
+                          - '80:80'
+                        depends_on:
+                          - backend
+                        networks:
+                          - mern_network
+
+                    networks:
+                      mern_network:
+                        driver: bridge
+
+                    volumes:
+                      mongodb_data:
+                    EOL
+
+                    docker-compose down
+                    docker-compose up -d
                     EOF
                     '''
                 }
